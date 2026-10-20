@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>AutoFill</title>
+<link rel="shortcut icon" href="icons/icon16.png">
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/sidepanel.css">
+</head>
+<body>
+
+  <header class="topbar">
+    <div class="brand">
+      <img src="icons/icon32.png" alt="">
+      <div>
+        <h1>AutoFill | V_08</h1>
+        <p class="tagline">Shiv Computer</p>
+      </div>
+    </div>
+    <button id="btn-add-profile" class="btn btn-gold" title="Naya profile banayein">
+      <span class="icon">＋</span> Profile
+    </button>
+  </header>
+
+  <nav class="tabs">
+    <button class="tab-btn is-active" id="tab-rules" data-tab="rules">Site Rules</button>
+    <button class="tab-btn" id="tab-profiles" data-tab="profiles">Profiles</button>
+  </nav>
+
+  <main id="rules-panel" class="profile-list">
+    <div class="how-to">
+      <p><strong>Kaise use karein:</strong> kisi bhi website ka form khud bharein, phir right-click karke
+      <em>"AutoFill → Yeh form save karein"</em> chunein. Agli baar wahi page khulega to ye fields
+      apne aap bhar jayengi — jo field pehle se site khud bhar chuki hai, use chheda nahi jayega
+      (jab tak "Overwrite" ON na ho).</p>
+    </div>
+    <div id="rules-list"></div>
+    <div class="empty-state" id="empty-rules-state">
+      <div class="empty-glyph">⚡</div>
+      <h2>Abhi koi rule save nahi hai</h2>
+      <p>Kisi form ko bhariye, right-click kariye, aur "AutoFill" se save kar dijiye.</p>
+    </div>
+  </main>
+
+  <main id="profile-list" class="profile-list hidden">
+    <!-- profiles render here -->
+    <div class="empty-state" id="empty-state">
+      <div class="empty-glyph">⚡</div>
+      <h2>Koi profile nahi hai</h2>
+      <p>Naya profile banayein aur apne fields add karein — naam, email, address, ya kuch bhi custom.</p>
+      <button class="btn btn-gold" id="btn-empty-add">Pehla profile banayein</button>
+    </div>
+  </main>
+
+  <footer class="bottombar">
+    <button id="btn-export" class="btn btn-ghost" title="Backup export karein">Export</button>
+    <button id="btn-import" class="btn btn-ghost" title="Backup import karein">Import</button>
+    <input type="file" id="import-file" accept="application/json" hidden>
+    <button id="btn-fill-now" class="btn btn-gold btn-fill" title="Is page ke liye saved rules abhi apply karein">
+      Fill Now
+    </button>
+    <text class="bottombar" class="btn btn-ghost" title="crafted by Shiv"> Crafted by Shiv</text>
+  </footer>
+
+  <!-- Profile editor dialog -->
+  <dialog id="profile-dialog" class="sheet">
+    <form id="profile-form" method="dialog">
+      <div class="sheet-head">
+        <h2 id="dialog-title">New Profile</h2>
+        <button type="button" class="icon-btn" data-close>✕</button>
+      </div>
+
+      <label class="field">
+        <span>Profile ka naam</span>
+        <input type="text" id="profile-name" placeholder="e.g. Personal, Office, Student" required>
+      </label>
+
+      <div class="fields-head">
+        <span>Fields</span>
+        <button type="button" id="btn-add-field" class="btn btn-ghost btn-sm">＋ Field</button>
+      </div>
+      <div id="fields-container" class="fields-container"></div>
+
+      <div class="sheet-actions">
+        <button type="button" class="btn btn-ghost" id="btn-delete-profile">Delete profile</button>
+        <div class="spacer"></div>
+        <button type="button" class="btn btn-ghost" data-close>Cancel</button>
+        <button type="submit" class="btn btn-gold">Save profile</button>
+      </div>
+    </form>
+  </dialog>
+
+  <!-- Rule editor dialog -->
+  <dialog id="rule-dialog" class="sheet">
+    <form id="rule-form" method="dialog">
+      <div class="sheet-head">
+        <h2 id="rule-dialog-title">Rule edit</h2>
+        <button type="button" class="icon-btn" data-close-rule>✕</button>
+      </div>
+      <label class="overwrite-toggle rule-edit-overwrite">
+        <input type="checkbox" id="rule-edit-overwrite">
+        <span>Overwrite (pehle se bhari fields bhi badlein)</span>
+      </label>
+      <div class="fields-head">
+        <span>Fields — value badal sakte hain</span>
+        <button type="button" id="btn-rule-add-field" class="btn btn-ghost btn-sm">＋ Field</button>
+      </div>
+      <div id="rule-fields-container" class="fields-container"></div>
+      <p class="rule-edit-hint">Dropdown mein sirf option ka text likhein (jaise <em>1 - Less than 1 km</em>). Ek se zyada value ho to <em>|</em> se alag karein. Naya field jodne ke liye uska label (jaise <em>Student's Height</em>) likhein.</p>
+      <div class="sheet-actions">
+        <div class="spacer"></div>
+        <button type="button" class="btn btn-ghost" data-close-rule>Cancel</button>
+        <button type="submit" class="btn btn-gold">Save</button>
+      </div>
+    </form>
+  </dialog>
+
+  <div id="toast" class="toast" aria-live="polite"></div>
+
+  <template id="rule-card-template">
+    <article class="profile-card rule-card">
+      <div class="rule-main">
+        <span class="rule-scope-badge"></span>
+        <div class="rule-text">
+          <span class="profile-name rule-label"></span>
+          <span class="field-count rule-field-count"></span>
+        </div>
+      </div>
+      <label class="overwrite-toggle" title="Pehle se bhari fields ko bhi overwrite karein">
+        <input type="checkbox" class="overwrite-checkbox">
+        <span>Overwrite</span>
+      </label>
+      <button class="icon-btn btn-edit-rule" title="Rule edit karein (values badlein / field jodein)">✎</button>
+      <button class="icon-btn btn-delete-rule" title="Rule delete karein">✕</button>
+    </article>
+  </template>
+
+  <template id="profile-card-template">
+    <article class="profile-card">
+      <label class="radio-row">
+        <input type="radio" name="active-profile" class="active-radio">
+        <span class="profile-name"></span>
+      </label>
+      <div class="profile-meta">
+        <span class="field-count"></span>
+      </div>
+      <div class="profile-actions">
+        <button class="icon-btn btn-fill-one" title="Is profile se bharein">⚡</button>
+        <button class="icon-btn btn-edit" title="Edit karein">✎</button>
+      </div>
+    </article>
+  </template>
+
+  <template id="field-row-template">
+    <div class="field-row">
+      <input type="text" class="field-label" placeholder="Label (e.g. Email)">
+      <input type="text" class="field-value" placeholder="Value (e.g. shiv@example.com)">
+      <button type="button" class="icon-btn btn-remove-field" title="Field hatayein">✕</button>
+    </div>
+  </template>
+
+  <script src="js/sidepanel.js" type="module"></script>
+</body>
+</html>
