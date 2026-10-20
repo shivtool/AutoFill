@@ -11,6 +11,7 @@ Apna khud ka autofill Chrome extension — kisi bhi form ko khud bhariye, "rule"
    - **"Yeh form poori site ke liye save karein"** — is poore domain ke har page ke liye
 4. Bas — agli baar jab bhi ye page (ya site) khulega, ye fields **apne aap** bhar jayengi
 
+<<<<<<< HEAD
 ## Custom dropdowns (list wale)
 
 Jo dropdown asli `<select>` nahi hote (Angular ng-select / Material, React-Select, MUI, Ant Design,
@@ -47,6 +48,8 @@ extension ab fields ko page ke order mein ek-ek karke bharta hai, har dropdown k
 phir nayi list dekhkar agli field bharta hai. Subject list der se aaye (kuch seconds) to bhi wo wait karta hai.
 **Zaroori:** purana rule dobara save kar lein (right-click -> Save), taaki dropdown ka text bhi save ho jaye.
 
+=======
+>>>>>>> 7a2b773fb3a8b7a94a825f0ff2b89c1ae7345832
 ## Overwrite kaise kaam karta hai
 
 Default: agar koi field pehle se bhari hai (site ne khud bhari ho, ya browser ke apne autofill se), to Shiv AutoFill use **chhedta nahi** — sirf khali fields bharta hai.

@@ -9,6 +9,7 @@
   if (window.__shivAutofillInstalled) return;
   window.__shivAutofillInstalled = true;
 
+<<<<<<< HEAD
   const TOAST_ID = "__shiv_autofill_toast";
   const STARTUP_WINDOW_MS = 7000;
 
@@ -40,16 +41,34 @@
     return !!el.readOnly;
   }
 
+=======
+  const FILLABLE_SELECTOR =
+    'input:not([type="hidden"]):not([type="password"]):not([type="submit"]):not([type="button"]):not([type="reset"]):not([type="image"]):not([type="file"]), textarea, select';
+
+>>>>>>> 7a2b773fb3a8b7a94a825f0ff2b89c1ae7345832
   function isVisible(el) {
     if (!(el instanceof HTMLElement)) return false;
     if (el.disabled) return false;
     const style = window.getComputedStyle(el);
     if (style.visibility === "hidden") return false;
 
+<<<<<<< HEAD
     // Checkboxes, radios, and selects are very often visually hidden and
     // replaced by a custom-styled widget (Select2 / react-select / MUI ...).
     // The underlying element is still the right thing to set.
     if (el.tagName === "SELECT" || isCheckable(el)) return true;
+=======
+    const type = (el.getAttribute("type") || "").toLowerCase();
+    // Checkboxes, radios, and selects are very often visually hidden and
+    // replaced by a custom-styled widget (common with design systems and
+    // libraries like Select2 / react-select / Material UI). The underlying
+    // element is still functionally real and usually the right thing to
+    // set — the custom widget listens for its "change" event — so don't
+    // reject these just because they're collapsed to 0x0 or display:none.
+    if (el.tagName === "SELECT" || type === "checkbox" || type === "radio") {
+      return true;
+    }
+>>>>>>> 7a2b773fb3a8b7a94a825f0ff2b89c1ae7345832
 
     if (style.display === "none") return false;
     const rect = el.getBoundingClientRect();
@@ -58,6 +77,7 @@
   }
 
   function labelTextFor(el) {
+<<<<<<< HEAD
     if (el.labels && el.labels.length) {
       const text = Array.from(el.labels)
         .map((l) => l.textContent.trim())
@@ -78,15 +98,40 @@
         .filter(Boolean)
         .join(" ");
       if (text) return text;
+=======
+    if (el.id) {
+      const lbl = document.querySelector(`label[for="${CSS.escape(el.id)}"]`);
+      if (lbl) return lbl.textContent.trim();
+    }
+    const parentLabel = el.closest("label");
+    if (parentLabel) return parentLabel.textContent.trim();
+    const labelledBy = el.getAttribute("aria-labelledby");
+    if (labelledBy) {
+      const ref = document.getElementById(labelledBy);
+      if (ref) return ref.textContent.trim();
+>>>>>>> 7a2b773fb3a8b7a94a825f0ff2b89c1ae7345832
     }
     return "";
   }
 
+<<<<<<< HEAD
   function fireInputEvents(el) {
+=======
+  function nativeSetValue(el, value) {
+    const isTextarea = el instanceof window.HTMLTextAreaElement;
+    const proto = isTextarea ? window.HTMLTextAreaElement.prototype : window.HTMLInputElement.prototype;
+    const descriptor = Object.getOwnPropertyDescriptor(proto, "value");
+    if (descriptor && descriptor.set) {
+      descriptor.set.call(el, value);
+    } else {
+      el.value = value;
+    }
+>>>>>>> 7a2b773fb3a8b7a94a825f0ff2b89c1ae7345832
     el.dispatchEvent(new Event("input", { bubbles: true }));
     el.dispatchEvent(new Event("change", { bubbles: true }));
   }
 
+<<<<<<< HEAD
   // All setters return "changed" | "same" | "fail".
 
   function nativeSetValue(el, value) {
@@ -162,6 +207,33 @@
       fireInputEvents(el);
     }
     return el.checked === desired ? "changed" : "fail";
+=======
+  function fillSelect(el, value) {
+    let matched = false;
+    for (const opt of el.options) {
+      if (opt.value === value || opt.textContent.trim() === value) {
+        el.value = opt.value;
+        matched = true;
+        break;
+      }
+    }
+    if (!matched) {
+      const norm = (s) => (s || "").toString().toLowerCase().trim();
+      const target = norm(value);
+      for (const opt of el.options) {
+        if (norm(opt.value) === target || norm(opt.textContent) === target) {
+          el.value = opt.value;
+          matched = true;
+          break;
+        }
+      }
+    }
+    if (matched) {
+      el.dispatchEvent(new Event("input", { bubbles: true }));
+      el.dispatchEvent(new Event("change", { bubbles: true }));
+    }
+    return matched;
+>>>>>>> 7a2b773fb3a8b7a94a825f0ff2b89c1ae7345832
   }
 
   // --- Stable element identity (used to find "the same field" again later) ---
@@ -187,7 +259,11 @@
   }
 
   function getElementKey(el) {
+<<<<<<< HEAD
     const type = inputType(el);
+=======
+    const type = (el.getAttribute("type") || "").toLowerCase();
+>>>>>>> 7a2b773fb3a8b7a94a825f0ff2b89c1ae7345832
     // Radios/checkboxes in a group share the same name, so the value must be
     // part of the key or every option in the group would collide.
     if (type === "radio") return `radio:${el.name || getPositionalPath(el)}:${el.value}`;
@@ -197,6 +273,7 @@
     return "path:" + getPositionalPath(el);
   }
 
+<<<<<<< HEAD
   // Fields that share a name (items[], repeated rows, same id twice) used to
   // collapse into one key, so only the last one was ever restored. The first
   // occurrence keeps the plain key (old saved rules still match); later ones
@@ -217,12 +294,37 @@
       out.push({ el, key: n === 1 ? base : `${base}#${n}` });
     }
     return out;
+=======
+  // Is this field still at whatever the page originally rendered it as?
+  // This is the correct way to detect "already filled by the site" —
+  // checking el.value alone breaks for checkboxes (always has a value
+  // attribute even when unchecked) and selects (the first option is rarely
+  // blank), which used to make AutoFill think they were always full.
+  function isFieldUntouched(el) {
+    const type = (el.getAttribute("type") || "").toLowerCase();
+    if (type === "checkbox" || type === "radio") {
+      return el.checked === el.defaultChecked;
+    }
+    if (el.tagName === "SELECT") {
+      let defaultOpt = null;
+      for (const opt of el.options) {
+        if (opt.defaultSelected) {
+          defaultOpt = opt;
+          break;
+        }
+      }
+      if (!defaultOpt && el.options.length) defaultOpt = el.options[0];
+      return defaultOpt ? el.value === defaultOpt.value : true;
+    }
+    return el.value === el.defaultValue;
+>>>>>>> 7a2b773fb3a8b7a94a825f0ff2b89c1ae7345832
   }
 
   function getFillableElements() {
     return Array.from(document.querySelectorAll(FILLABLE_SELECTOR)).filter(isVisible);
   }
 
+<<<<<<< HEAD
   // type=range / type=color always have a non-empty value even with no
   // value attribute, so `el.value === el.defaultValue` is never true for them.
   // Ask the browser what the sanitized default would be.
@@ -924,10 +1026,41 @@
       const value = el.value;
       if (!value || isFieldUntouched(el)) continue; // empty, or just what the site pre-rendered
       fields.push({ key, value, kind: "text", label });
+=======
+  // --- Snapshot: capture whatever the user has currently set ---
+
+  function collectSnapshot() {
+    const elements = getFillableElements();
+    const fields = [];
+    for (const el of elements) {
+      const type = (el.getAttribute("type") || "").toLowerCase();
+      if (type === "checkbox" || type === "radio") {
+        // Only capture boxes the user actually changed from the page's
+        // default — otherwise every untouched checkbox on the page would
+        // get recorded as "should be unchecked".
+        if (el.checked === el.defaultChecked) continue;
+        fields.push({
+          key: getElementKey(el),
+          value: el.checked,
+          kind: "boolean",
+          label: labelTextFor(el) || el.name || el.value || "",
+        });
+        continue;
+      }
+      const value = el.value;
+      if (!value) continue;
+      fields.push({
+        key: getElementKey(el),
+        value,
+        kind: el.tagName === "SELECT" ? "select" : "text",
+        label: labelTextFor(el) || el.getAttribute("placeholder") || el.name || el.id || "",
+      });
+>>>>>>> 7a2b773fb3a8b7a94a825f0ff2b89c1ae7345832
     }
     return fields;
   }
 
+<<<<<<< HEAD
   // --- Replay ---
 
   // Never replay a value onto an element of a different type than it was
@@ -1166,6 +1299,43 @@
     if (filled > toasted) showPageToast(`शिव ने: ${filled} विकल्प भर दिया ✓`);
     else if (!filled && manual && window === window.top) showPageToast("Aur koi khali field nahi mili");
     return { ok: filled > 0, filled, skipped, unfilled: missingLabels.length, unfilledLabels: missingLabels };
+=======
+  // --- Replay: fill a saved rule, skipping fields that already have a value ---
+
+  function applyRuleToPage(rule) {
+    if (!rule || !Array.isArray(rule.fields) || !rule.fields.length) {
+      return { ok: false, filled: 0, skipped: 0 };
+    }
+    const elements = getFillableElements();
+    const keyMap = new Map();
+    for (const el of elements) keyMap.set(getElementKey(el), el);
+
+    let filled = 0;
+    let skipped = 0;
+
+    for (const field of rule.fields) {
+      const el = keyMap.get(field.key);
+      if (!el) continue;
+      if (!isFieldUntouched(el) && !rule.overwrite) {
+        skipped++;
+        continue;
+      }
+      if (field.kind === "boolean") {
+        if (el.checked !== field.value) {
+          el.checked = field.value;
+          el.dispatchEvent(new Event("input", { bubbles: true }));
+          el.dispatchEvent(new Event("change", { bubbles: true }));
+        }
+        filled++;
+      } else if (el.tagName === "SELECT") {
+        if (fillSelect(el, field.value)) filled++;
+      } else {
+        nativeSetValue(el, field.value);
+        filled++;
+      }
+    }
+    return { ok: filled > 0, filled, skipped };
+>>>>>>> 7a2b773fb3a8b7a94a825f0ff2b89c1ae7345832
   }
 
   async function autoApplySiteRules(manual = false) {
@@ -1173,6 +1343,7 @@
     try {
       data = await chrome.storage.local.get("safill_rules");
     } catch (e) {
+<<<<<<< HEAD
       return { ok: false, filled: 0, reason: "no-context" }; // extension reloaded / page navigating away
     }
     const rules = Array.isArray(data.safill_rules) ? data.safill_rules : [];
@@ -1204,11 +1375,39 @@
     const result = await sessionPromise;
     if (sessionRerun) { sessionRerun = false; setTimeout(autoApplySiteRules, 500); }
     return result;
+=======
+      return { ok: false, filled: 0 }; // extension context not ready / page navigating away
+    }
+    const rules = Array.isArray(data.safill_rules) ? data.safill_rules : [];
+    if (!rules.length) return { ok: false, filled: 0, reason: "no-rules" };
+
+    const url = new URL(location.href);
+    const matches = rules.filter(
+      (r) => r.host === url.hostname && (r.scope === "site" || (r.scope === "page" && r.path === url.pathname))
+    );
+    if (!matches.length) return { ok: false, filled: 0, reason: "no-match" };
+
+    // Apply site-wide rules first, then page-specific rules so the more
+    // specific rule wins when both exist for the same field.
+    matches.sort((a, b) => (a.scope === "site" ? 0 : 1) - (b.scope === "site" ? 0 : 1));
+
+    let totalFilled = 0;
+    let totalSkipped = 0;
+    for (const rule of matches) {
+      const result = applyRuleToPage(rule);
+      totalFilled += result.filled;
+      totalSkipped += result.skipped;
+    }
+    if (totalFilled > 0) showPageToast(`शिव ने: ${totalFilled} विकल्प भर दिया ✓`);
+    else if (manual) showPageToast("Aur koi khali field nahi mili");
+    return { ok: totalFilled > 0, filled: totalFilled, skipped: totalSkipped };
+>>>>>>> 7a2b773fb3a8b7a94a825f0ff2b89c1ae7345832
   }
 
   // --- Small on-page toast (no extra permission needed) ---
 
   function showPageToast(message) {
+<<<<<<< HEAD
     let el = document.getElementById(TOAST_ID);
     if (el) {
       // Reuse the existing toast instead of removing/recreating it —
@@ -1253,6 +1452,74 @@
     }, 2400);
   }
 
+=======
+  let el = document.getElementById("__shiv_autofill_toast");
+  if (el) {
+    // Reuse the existing toast instead of removing/recreating it —
+    // that remove+recreate cycle is what causes the blinking.
+    clearTimeout(el._hideTimer);
+    el.textContent = message;
+    el.style.opacity = "1";
+    el.style.transform = "translateY(0)";
+  } else {
+    el = document.createElement("div");
+    el.id = "__shiv_autofill_toast";
+    el.textContent = message;
+    Object.assign(el.style, {
+      position: "fixed",
+      right: "16px",
+      bottom: "16px",
+      zIndex: 2147483647,
+      background: "#054ffa",
+      color: "#ece9e2",
+      border: "2px solid rgba(236, 188, 27, 0.97)",
+      borderRadius: "10px",
+      padding: "9px 14px",
+      font: "600 12.5px/1.3 -apple-system, Segoe UI, sans-serif",
+      boxShadow: "0 10px 10px -10px rgba(240, 7, 170, 0.89)",
+      opacity: "0",
+      transition: "opacity .18s ease, transform .18s ease",
+      transform: "translateY(6px)",
+      pointerEvents: "none",
+    });
+    document.documentElement.appendChild(el);
+    requestAnimationFrame(() => {
+      el.style.opacity = "1";
+      el.style.transform = "translateY(0)";
+    });
+  }
+
+  el._hideTimer = setTimeout(() => {
+    el.style.opacity = "0";
+    el.style.transform = "translateY(6px)";
+    setTimeout(() => el.remove(), 250);
+  }, 2400);
+}
+
+
+  // --- Message handling ---
+
+  chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+    if (message?.type === "SHIV_AUTOFILL_FILL") {
+      // Legacy: fill from a manually-built profile using label/synonym matching.
+      sendResponse(applyLegacyProfile(message.profile));
+      return;
+    }
+    if (message?.type === "SHIV_AUTOFILL_COLLECT_SNAPSHOT") {
+      sendResponse({ fields: collectSnapshot() });
+      return;
+    }
+    if (message?.type === "SHIV_AUTOFILL_TOAST") {
+      showPageToast(message.message);
+      return;
+    }
+    if (message?.type === "SHIV_AUTOFILL_RUN_RULES_NOW") {
+      autoApplySiteRules(true).then((result) => sendResponse(result));
+      return true; // keep the channel open for the async response
+    }
+  });
+
+>>>>>>> 7a2b773fb3a8b7a94a825f0ff2b89c1ae7345832
   // --- Legacy profile engine (label/synonym based) kept for manual profiles ---
 
   const SYNONYMS = {
@@ -1271,6 +1538,7 @@
     username: ["user", "login", "userid"],
   };
 
+<<<<<<< HEAD
   // Unicode-aware: the old a-z0-9 filter erased Hindi (and every other
   // non-Latin) labels completely, so they could never match anything.
   function normalize(str) {
@@ -1280,6 +1548,10 @@
       .normalize("NFKD")
       .replace(/[\u0300-\u036f]/g, "") // strip Latin accents only; keep Devanagari vowel signs
       .replace(/[^\p{L}\p{M}\p{N}]+/gu, "");
+=======
+  function normalize(str) {
+    return (str || "").toString().toLowerCase().normalize("NFKD").replace(/[^a-z0-9]+/g, "");
+>>>>>>> 7a2b773fb3a8b7a94a825f0ff2b89c1ae7345832
   }
 
   function expandTokens(normalizedLabel) {
@@ -1293,6 +1565,7 @@
     return [...tokens];
   }
 
+<<<<<<< HEAD
   // Each candidate keeps its normalized form AND its separate words
   // ("txtMobileNo" -> txt, mobile, no) so a profile label can match a whole
   // word instead of any substring ("name" must not match "username").
@@ -1311,23 +1584,36 @@
 
   function candidateStrings(el) {
     const ac = (el.getAttribute("autocomplete") || "").trim().toLowerCase();
+=======
+  function candidateStrings(el) {
+>>>>>>> 7a2b773fb3a8b7a94a825f0ff2b89c1ae7345832
     return [
       el.getAttribute("name"),
       el.id,
       el.getAttribute("placeholder"),
       el.getAttribute("aria-label"),
+<<<<<<< HEAD
       ac === "on" || ac === "off" ? "" : ac,
       labelTextFor(el),
     ]
       .filter(Boolean)
       .map(toCandidate)
       .filter(Boolean);
+=======
+      el.getAttribute("autocomplete"),
+      labelTextFor(el),
+    ]
+      .filter(Boolean)
+      .map(normalize)
+      .filter((s) => s.length > 0);
+>>>>>>> 7a2b773fb3a8b7a94a825f0ff2b89c1ae7345832
   }
 
   function scoreMatch(fieldTokens, candidate) {
     let best = 0;
     for (const token of fieldTokens) {
       if (!token) continue;
+<<<<<<< HEAD
       if (candidate.norm === token) {
         best = Math.max(best, 100);
         continue;
@@ -1343,6 +1629,12 @@
       if (shorter >= 4 && (candidate.norm.includes(token) || token.includes(candidate.norm))) {
         const ratio = shorter / longer;
         if (ratio >= 0.65) best = Math.max(best, 40 + ratio * 40);
+=======
+      if (candidate === token) best = Math.max(best, 100);
+      else if (candidate.includes(token) || token.includes(candidate)) {
+        const ratio = Math.min(token.length, candidate.length) / Math.max(token.length, candidate.length);
+        best = Math.max(best, 40 + ratio * 40);
+>>>>>>> 7a2b773fb3a8b7a94a825f0ff2b89c1ae7345832
       }
     }
     return best;
@@ -1352,6 +1644,7 @@
     if (!profile || !Array.isArray(profile.fields) || !profile.fields.length) {
       return { ok: false, filled: 0, reason: "empty-profile" };
     }
+<<<<<<< HEAD
     // Checkbox/radio are excluded: writing .value into them rewrites the value
     // that gets submitted instead of ticking anything.
     const elements = getFillableElements().filter((el) => !isCheckable(el) && !isLocked(el) && !isSensitive(el));
@@ -1365,6 +1658,17 @@
 
     let filled = 0;
     let matched = 0;
+=======
+    const elements = getFillableElements();
+    if (!elements.length) return { ok: false, filled: 0, reason: "no-fields-on-page" };
+
+    const fields = profile.fields
+      .filter((f) => f.label && f.value)
+      .map((f) => ({ ...f, tokens: expandTokens(normalize(f.label)) }));
+    if (!fields.length) return { ok: false, filled: 0, reason: "empty-profile" };
+
+    let filled = 0;
+>>>>>>> 7a2b773fb3a8b7a94a825f0ff2b89c1ae7345832
     for (const el of elements) {
       const candidates = candidateStrings(el);
       if (!candidates.length) continue;
@@ -1380,6 +1684,7 @@
         }
       }
       if (bestField && bestScore >= 55) {
+<<<<<<< HEAD
         matched++;
         const result = el.tagName === "SELECT" ? fillSelect(el, bestField.value) : nativeSetValue(el, bestField.value);
         if (result === "changed") filled++;
@@ -1439,18 +1744,47 @@
   // 1) bfcache restore does not re-run this script but fires "pageshow".
   window.addEventListener("pageshow", () => {
     restartStartupWindow();
+=======
+        if (el.tagName === "SELECT") {
+          if (fillSelect(el, bestField.value)) filled++;
+        } else {
+          nativeSetValue(el, bestField.value);
+          filled++;
+        }
+      }
+    }
+    return { ok: filled > 0, filled, total: elements.length };
+  }
+
+  // Run auto-fill on load, with several retries — government/ASP.NET style
+  // pages often reload part of the page (postback) when a dropdown changes,
+  // which can interrupt a single fill pass, so keep re-checking for a while.
+  autoApplySiteRules();
+  [400, 900, 1600, 2600, 4000, 6000].forEach((ms) => setTimeout(autoApplySiteRules, ms));
+
+  // --- Keep working without a manual refresh ---
+  // 1) Back/forward navigation often restores the page from bfcache, which
+  //    does NOT re-run this script — but it does fire "pageshow".
+  window.addEventListener("pageshow", () => {
+>>>>>>> 7a2b773fb3a8b7a94a825f0ff2b89c1ae7345832
     autoApplySiteRules();
     setTimeout(autoApplySiteRules, 800);
   });
 
+<<<<<<< HEAD
   // 2) SPA navigation. Content scripts live in an isolated world, so wrapping
   //    history.pushState here never sees the page's own calls — the old
   //    wrapper was dead code. Use the Navigation API plus popstate, and also
   //    re-check from the DOM observer below.
+=======
+  // 2) Single-page apps change the URL via pushState/replaceState without a
+  //    full reload. Watch for that and re-check rules for the new path.
+>>>>>>> 7a2b773fb3a8b7a94a825f0ff2b89c1ae7345832
   let lastPath = location.pathname;
   function handlePossibleUrlChange() {
     if (location.pathname === lastPath) return;
     lastPath = location.pathname;
+<<<<<<< HEAD
     restartStartupWindow();
     autoApplySiteRules();
     setTimeout(autoApplySiteRules, 800);
@@ -1502,4 +1836,27 @@
       attributeFilter: ["class", "style", "hidden", "aria-hidden", "aria-selected", "aria-expanded", "open"],
     });
   } catch (e) { /* ignore */ }
+=======
+    autoApplySiteRules();
+    setTimeout(autoApplySiteRules, 800);
+  }
+  for (const fn of ["pushState", "replaceState"]) {
+    const original = history[fn];
+    history[fn] = function (...args) {
+      const result = original.apply(this, args);
+      handlePossibleUrlChange();
+      return result;
+    };
+  }
+  window.addEventListener("popstate", handlePossibleUrlChange);
+
+  // 3) Some forms render late (client-side hydration). Watch the DOM for new
+  //    fillable elements and give them one fill pass, debounced.
+  let mutationTimer = null;
+  const observer = new MutationObserver(() => {
+    clearTimeout(mutationTimer);
+    mutationTimer = setTimeout(autoApplySiteRules, 400);
+  });
+  observer.observe(document.documentElement, { childList: true, subtree: true });
+>>>>>>> 7a2b773fb3a8b7a94a825f0ff2b89c1ae7345832
 })();

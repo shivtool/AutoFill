@@ -58,7 +58,11 @@ async function exportBackup() {
   const [profiles, activeId, rules] = await Promise.all([
     getProfiles(),
     getActiveProfileId(),
+<<<<<<< HEAD
     getRules(),
+=======
+    getRulesSafe(),
+>>>>>>> 7a2b773fb3a8b7a94a825f0ff2b89c1ae7345832
   ]);
   return {
     app: "shiv-autofill",
@@ -70,6 +74,7 @@ async function exportBackup() {
   };
 }
 
+<<<<<<< HEAD
 const RULE_KINDS = new Set(["text", "select", "multiselect", "boolean", "custom", "auto"]);
 
 function str(v) {
@@ -151,6 +156,23 @@ async function importBackup(payload) {
     await saveRules(sanitizeRules(payload.rules));
   }
   return profiles;
+=======
+async function getRulesSafe() {
+  const data = await chrome.storage.local.get(RULES_KEY);
+  return Array.isArray(data[RULES_KEY]) ? data[RULES_KEY] : [];
+}
+
+async function importBackup(payload) {
+  if (!payload || !Array.isArray(payload.profiles)) {
+    throw new Error("Invalid backup file");
+  }
+  await saveProfiles(payload.profiles);
+  if (payload.activeId) await setActiveProfileId(payload.activeId);
+  if (Array.isArray(payload.rules)) {
+    await chrome.storage.local.set({ [RULES_KEY]: payload.rules });
+  }
+  return payload.profiles;
+>>>>>>> 7a2b773fb3a8b7a94a825f0ff2b89c1ae7345832
 }
 
 // --- Site rules: capture-current-form-and-replay-later ---
@@ -164,6 +186,7 @@ async function saveRules(rules) {
   await chrome.storage.local.set({ [RULES_KEY]: rules });
 }
 
+<<<<<<< HEAD
 // Multi-tab / multi-step forms live on ONE url, and each save only sees the
 // step the user is on. So a new save is merged into the saved rule: fields saved
 // now replace the same field, everything else already saved is kept (remove
@@ -183,6 +206,8 @@ function mergeFields(oldFields, newFields) {
   return kept.concat(incoming);
 }
 
+=======
+>>>>>>> 7a2b773fb3a8b7a94a825f0ff2b89c1ae7345832
 async function upsertRule(rule) {
   const rules = await getRules();
   // Same host+path+scope replaces the previous rule instead of duplicating.
@@ -192,11 +217,16 @@ async function upsertRule(rule) {
   if (idx === -1) {
     rules.push(rule);
   } else {
+<<<<<<< HEAD
     rule.overwrite = !!rules[idx].overwrite; // keep user's existing overwrite preference
     rule.fields = mergeFields(rules[idx].fields, rule.fields);
     rule.id = rules[idx].id;
     rule.createdAt = rules[idx].createdAt || rule.createdAt;
     rule.updatedAt = new Date().toISOString();
+=======
+    rule.overwrite = rules[idx].overwrite; // keep user's existing overwrite preference
+    rule.id = rules[idx].id;
+>>>>>>> 7a2b773fb3a8b7a94a825f0ff2b89c1ae7345832
     rules[idx] = rule;
   }
   await saveRules(rules);
@@ -209,6 +239,7 @@ async function deleteRule(id) {
   return rules;
 }
 
+<<<<<<< HEAD
 // Edit a saved rule: replace its fields and/or overwrite flag.
 async function updateRule(id, patch) {
   const rules = await getRules();
@@ -221,6 +252,8 @@ async function updateRule(id, patch) {
   return rules;
 }
 
+=======
+>>>>>>> 7a2b773fb3a8b7a94a825f0ff2b89c1ae7345832
 async function setRuleOverwrite(id, overwrite) {
   const rules = await getRules();
   const rule = rules.find((r) => r.id === id);
@@ -247,6 +280,9 @@ export {
   upsertRule,
   deleteRule,
   setRuleOverwrite,
+<<<<<<< HEAD
   updateRule,
   mergeFields,
+=======
+>>>>>>> 7a2b773fb3a8b7a94a825f0ff2b89c1ae7345832
 };

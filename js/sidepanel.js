@@ -11,7 +11,10 @@ import {
   getRules,
   deleteRule,
   setRuleOverwrite,
+<<<<<<< HEAD
   updateRule,
+=======
+>>>>>>> 7a2b773fb3a8b7a94a825f0ff2b89c1ae7345832
 } from "./storage.js";
 
 const listEl = document.getElementById("profile-list");
@@ -88,8 +91,11 @@ async function renderRules() {
       toast(checkbox.checked ? "Overwrite ON — pehle se bhari fields bhi badlengi" : "Overwrite OFF — khali fields hi bharengi");
     });
 
+<<<<<<< HEAD
     node.querySelector(".btn-edit-rule").addEventListener("click", () => openRuleEditor(rule));
 
+=======
+>>>>>>> 7a2b773fb3a8b7a94a825f0ff2b89c1ae7345832
     node.querySelector(".btn-delete-rule").addEventListener("click", async () => {
       await deleteRule(rule.id);
       toast("Rule delete ho gaya");
@@ -100,6 +106,7 @@ async function renderRules() {
   }
 }
 
+<<<<<<< HEAD
 // --- Rule editor ---
 
 const ruleDialog = document.getElementById("rule-dialog");
@@ -211,6 +218,8 @@ ruleForm.addEventListener("submit", async () => {
   renderRules();
 });
 
+=======
+>>>>>>> 7a2b773fb3a8b7a94a825f0ff2b89c1ae7345832
 // --- Profiles (manual, optional) ---
 
 function addFieldRow(label = "", value = "") {
@@ -246,6 +255,7 @@ function openDialogForEdit(profile) {
 }
 
 async function render() {
+<<<<<<< HEAD
   let [profiles, activeId] = await Promise.all([getProfiles(), getActiveProfileId()]);
   const effectiveActive = activeId && profiles.some((p) => p.id === activeId) ? activeId : profiles[0]?.id ?? null;
   if (effectiveActive !== activeId) {
@@ -258,12 +268,26 @@ async function render() {
   listEl.querySelectorAll(".profile-card").forEach((n) => n.remove());
   emptyState.classList.toggle("hidden", profiles.length > 0);
 
+=======
+  const [profiles, activeId] = await Promise.all([getProfiles(), getActiveProfileId()]);
+  listEl.querySelectorAll(".profile-card").forEach((n) => n.remove());
+  emptyState.classList.toggle("hidden", profiles.length > 0);
+
+  const effectiveActive = activeId && profiles.some((p) => p.id === activeId) ? activeId : profiles[0]?.id;
+  if (effectiveActive !== activeId) await setActiveProfileId(effectiveActive || null);
+
+>>>>>>> 7a2b773fb3a8b7a94a825f0ff2b89c1ae7345832
   for (const profile of profiles) {
     const node = cardTemplate.content.cloneNode(true);
     const card = node.querySelector(".profile-card");
     const radio = node.querySelector(".active-radio");
+<<<<<<< HEAD
     radio.checked = profile.id === activeId;
     card.classList.toggle("is-active", profile.id === activeId);
+=======
+    radio.checked = profile.id === effectiveActive;
+    card.classList.toggle("is-active", profile.id === effectiveActive);
+>>>>>>> 7a2b773fb3a8b7a94a825f0ff2b89c1ae7345832
     node.querySelector(".profile-name").textContent = profile.name;
     const count = (profile.fields || []).filter((f) => f.label).length;
     node.querySelector(".field-count").textContent = `${count} field${count === 1 ? "" : "s"}`;
@@ -303,10 +327,13 @@ async function triggerFill(profile) {
       toast("Is page par koi form field nahi mila");
     } else if (result?.reason === "empty-profile") {
       toast("Is profile mein koi field nahi hai");
+<<<<<<< HEAD
     } else if (result?.reason === "no-match") {
       toast("Profile ki koi field is page se match nahi hui");
     } else if (result?.reason === "already-filled") {
       toast("Matching fields pehle se bhari hui hain");
+=======
+>>>>>>> 7a2b773fb3a8b7a94a825f0ff2b89c1ae7345832
     } else {
       toast("Fill nahi ho paya, page reload karke try karein");
     }
@@ -366,7 +393,11 @@ fillNowBtn.addEventListener("click", async () => {
         toast("Is page par fill nahi ho saka");
         return;
       }
+<<<<<<< HEAD
       if (result?.ok) toast(`${result.filled} field bhare gaye ✓` + (result.unfilled ? ` — ${result.unfilled} nahi bhari (page ka Console dekhein)` : ""));
+=======
+      if (result?.ok) toast(`${result.filled} field bhare gaye ✓`);
+>>>>>>> 7a2b773fb3a8b7a94a825f0ff2b89c1ae7345832
       else if (result?.reason === "no-match") toast("Is page ke liye koi rule save nahi hai");
       else if (result?.reason === "no-rules") toast("Abhi koi rule save nahi hai");
       else toast("Koi nayi khali field nahi mili");
@@ -385,10 +416,15 @@ document.getElementById("btn-export").addEventListener("click", async () => {
   const a = document.createElement("a");
   a.href = url;
   a.download = `shiv-autofill-backup-${new Date().toISOString().slice(0, 10)}.json`;
+<<<<<<< HEAD
   document.body.appendChild(a);
   a.click();
   a.remove();
   setTimeout(() => URL.revokeObjectURL(url), 1000);
+=======
+  a.click();
+  URL.revokeObjectURL(url);
+>>>>>>> 7a2b773fb3a8b7a94a825f0ff2b89c1ae7345832
   toast("Backup export ho gaya");
 });
 
